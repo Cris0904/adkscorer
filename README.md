@@ -1,350 +1,130 @@
-# ETL Movilidad Medellín
+# ADK News Scorer - Proyecto Limpio
 
-Sistema de extracción, procesamiento y alertas de noticias de movilidad urbana en Medellín usando ADK de Google (Gemini) como componente central de clasificación inteligente.
-
-## ⚡ Quick Start
-
-**¿Nuevo en el proyecto? Elige tu camino:**
-
-### 🚀 Opción 1: MVP Local (Recomendado - 3-5 días)
-Validación rápida y económica con script Python local.
-- ⏱️ **Tiempo:** 3-5 días
-- 💰 **Costo:** $0-5/mes
-- 📖 **Seguir:** [RESUMEN_ANALISIS_MVP.md](./RESUMEN_ANALISIS_MVP.md) → [PLAN_MVP_LOCAL.md](./PLAN_MVP_LOCAL.md)
-
-### ☁️ Opción 2: Cloud Completo (Producción - 25 días)
-Sistema cloud-native escalable y robusto.
-- ⏱️ **Tiempo:** 25 días
-- 💰 **Costo:** $125-185/mes
-- 📖 **Seguir:** [PLAN_IMPLEMENTACION.md](./PLAN_IMPLEMENTACION.md)
-
-**¿No estás seguro?** Lee [COMPARATIVA_FINAL.md](./COMPARATIVA_FINAL.md) para decidir.
-
----
-
-## Resumen del Sistema
-
-- **Frecuencia**: Cada 5 minutos (cron: `*/5 * * * *`)
-- **Fuentes**: Twitter/X, Metro Medellín, medios locales
-- **Procesamiento**: Normalización → Deduplicación → Scoring ADK → Persistencia → Embeddings
-- **Alertas**: Slack/Telegram para severidad alta/crítica
-- **Stack Cloud**: n8n + Python (FastAPI) + Node.js (Express/Playwright) + Postgres + pgvector
-- **Stack Local**: Python script + SQLite + Google Vertex AI (Gemini)
-
-## Arquitectura
-
-### Cloud (Opción 2)
-```
-Fuentes → n8n → [ADK Scorer | Scraper] → Postgres+pgvector → Alertas
-```
-
-### Local (Opción 1)
-```
-Fuentes → Python Script (ADK integrado) → SQLite → Alertas
-```
-
-Ver [ARQUITECTURA.md](./ARQUITECTURA.md) o [ANALISIS_MVP_LOCAL.md](./ANALISIS_MVP_LOCAL.md) para detalles.
-
-## Documentación
-
-### Análisis y Decisión
-- [RESUMEN_ANALISIS_MVP.md](./RESUMEN_ANALISIS_MVP.md) - **EMPEZAR AQUÍ** - Resumen ejecutivo
-- [COMPARATIVA_FINAL.md](./COMPARATIVA_FINAL.md) - Comparación Cloud vs Local
-- [ANALISIS_MVP_LOCAL.md](./ANALISIS_MVP_LOCAL.md) - Análisis detallado de viabilidad
-
-### Planes de Implementación
-- [PLAN_MVP_LOCAL.md](./PLAN_MVP_LOCAL.md) - Plan día a día (3-5 días) - **Recomendado**
-- [PLAN_IMPLEMENTACION.md](./PLAN_IMPLEMENTACION.md) - Plan cloud (25 días)
-
-### Referencia Técnica
-- [ARQUITECTURA.md](./ARQUITECTURA.md) - Arquitectura cloud detallada
-- [RUNBOOK.md](./RUNBOOK.md) - Guía operativa
-- [INDEX.md](./INDEX.md) - Índice completo de archivos
+Este proyecto es un agente ADK (Agent Development Kit) de Google que analiza noticias de movilidad en Medellín mediante web scraping y las clasifica por relevancia.
 
 ## Estructura del Proyecto
 
 ```
-.
-├── README.md                        # Este archivo
-│
-├── # Documentación (7 archivos)
-├── RESUMEN_ANALISIS_MVP.md          # 🎯 Empezar aquí
-├── PLAN_MVP_LOCAL.md                # Plan local (3-5 días)
-├── COMPARATIVA_FINAL.md             # Decisión Cloud vs Local
-├── ANALISIS_MVP_LOCAL.md            # Análisis de viabilidad
-├── PLAN_IMPLEMENTACION.md           # Plan cloud (25 días)
-├── ARQUITECTURA.md                  # Arquitectura detallada
-├── RUNBOOK.md                       # Guía operativa
-│
-├── terraform/                  # Infraestructura como código
-│   ├── main.tf
-│   ├── variables.tf
-│   ├── outputs.tf
-│   └── modules/
-│       ├── database/
-│       ├── cloud-run/
-│       └── secrets/
-│
-├── db-migrations/              # SQL schema y migraciones
-│   ├── 001_initial_schema.sql
-│   ├── functions/
-│   ├── views/
-│   └── maintenance/
-│
-├── adk-scorer/                 # Microservicio de scoring (Python)
-│   ├── app/
-│   │   ├── main.py
-│   │   ├── scorer.py
-│   │   ├── models.py
-│   │   └── prompts.py
-│   ├── tests/
-│   ├── Dockerfile
-│   ├── requirements.txt
-│   └── README.md
-│
-├── scraper-adv/                # Microservicio de scraping (Node.js)
-│   ├── src/
-│   │   ├── index.ts
-│   │   ├── scraper.ts
-│   │   └── config.ts
-│   ├── tests/
-│   ├── Dockerfile
-│   ├── package.json
-│   └── README.md
-│
-├── n8n-workflows/              # Workflows exportados (JSON)
-│   ├── etl-movilidad-main.json
-│   ├── etl-movilidad-health.json
-│   ├── etl-movilidad-maintenance.json
-│   └── README.md
-│
-└── scripts/                    # Utilidades y scripts de ops
-    ├── check-kpis.sh
-    ├── rotate-secrets.sh
-    ├── test-e2e.sh
-    └── dashboard.py
+etl-movilidad-local/
+├── src/
+│   ├── main.py                      # Script principal del ETL
+│   ├── extractors_apify_simple.py   # Extractor con Apify (prioritario)
+│   ├── extractors.py                # Extractor directo (fallback)
+│   ├── adk_scorer_v3.py             # Scorer ADK con Google Gemini
+│   ├── adk_scorer.py                # Mock scorer para testing
+│   ├── alert_manager.py             # Sistema de alertas
+│   ├── db.py                        # Base de datos SQLite
+│   ├── db_supabase.py               # Base de datos Supabase (opcional)
+│   ├── prompts/
+│   │   ├── __init__.py
+│   │   └── system_prompt.py         # Prompts para el ADK
+│   └── schemas/
+│       ├── __init__.py
+│       └── scoring_schema.py        # Schema Pydantic para validación
+├── data/                            # Directorio para SQLite DB
+├── requirements.txt                 # Dependencias Python
+└── .env.example                     # Template de variables de entorno
+
 ```
 
-## Quick Start
+## Flujo de Datos
 
-### Pre-requisitos
+1. **Extracción** (`extractors_apify_simple.py` o `extractors.py`)
+   - Scraping de noticias de múltiples fuentes
+   - Normalización de datos
 
-- GCP project con billing habilitado
-- n8n desplegado (Railway/Render/GCP VM)
-- Postgres 15+ con pgvector
-- Credenciales: Twitter API, Slack, Telegram
+2. **Deduplicación** (`db.py` o `db_supabase.py`)
+   - Hash URL para evitar duplicados
+   - Consulta a base de datos
 
-### Despliegue (Orden)
+3. **Scoring con ADK** (`adk_scorer_v3.py`)
+   - Análisis con Google Gemini via ADK
+   - Clasificación por relevancia, severidad y área
+   - Extracción de entidades y tags
 
-1. **Infraestructura Base**
-   ```bash
-   cd terraform
-   terraform init
-   terraform apply
-   ```
+4. **Almacenamiento** (`db.py` o `db_supabase.py`)
+   - Guarda noticias relevantes (keep=true)
+   - Log de ejecuciones
 
-2. **Base de Datos**
-   ```bash
-   psql $DATABASE_URL -f db-migrations/001_initial_schema.sql
-   ```
+5. **Alertas** (`alert_manager.py`)
+   - Notificaciones para severidad high/critical
+   - Consola, archivo JSON y email (opcional)
 
-3. **Microservicios**
-   ```bash
-   # ADK Scorer
-   cd adk-scorer
-   gcloud builds submit --config=cloudbuild.yaml
+## Instalación
 
-   # Scraper
-   cd scraper-adv
-   npm run build
-   gcloud builds submit --config=cloudbuild.yaml
-   ```
-
-4. **n8n**
-   - Importar workflows desde `n8n-workflows/`
-   - Configurar credenciales (Postgres, Cloud Run, Slack, Telegram)
-   - Activar cron triggers
-
-5. **Validación**
-   ```bash
-   ./scripts/test-e2e.sh
-   ```
-
-Ver [PLAN_IMPLEMENTACION.md](./PLAN_IMPLEMENTACION.md) sección "Guía de Despliegue" para detalles completos.
-
-## Componentes
-
-### n8n Orquestador
-- Cron cada 5 min (TZ: America/Bogota)
-- Extracción multi-fuente
-- Normalización y deduplicación
-- Coordinación de microservicios
-- Persistencia y alertas
-
-### ADK Scorer (Cloud Run)
-- Clasificación con Gemini 1.5 Flash
-- Scoring: keep/discard, relevance, severity
-- Tagging y extracción de entidades
-- API REST: `POST /score`
-
-### Scraper Avanzado (Cloud Run)
-- Playwright para rendering JS
-- Fallback cuando HTTP normal falla
-- Rate limiting: 30 req/min
-- API REST: `POST /fetch`
-
-### Postgres + pgvector
-- Tablas: `news_item`, `news_embedding`, `etl_execution_log`
-- Búsqueda semántica con cosine similarity
-- Vistas de KPIs y métricas
-- Backups automáticos diarios
-
-## Observabilidad
-
-### Logs
 ```bash
-# Ver logs de ADK Scorer
-gcloud logging read "resource.type=cloud_run_revision AND resource.labels.service_name=adk-scorer" --limit 50
-
-# Ver logs de Scraper
-gcloud logging read "resource.type=cloud_run_revision AND resource.labels.service_name=scraper-adv" --limit 50
+cd etl-movilidad-local
+pip install -r requirements.txt
 ```
 
-### Métricas
+## Configuración
+
+Copia `.env.example` a `.env` y configura:
+
 ```bash
-# KPIs rápidos
-./scripts/check-kpis.sh
+# Google Cloud (para ADK Scorer)
+GOOGLE_CLOUD_PROJECT=tu-proyecto
+GOOGLE_CLOUD_LOCATION=us-central1
+GEMINI_MODEL=gemini-2.0-flash
 
-# Consulta SQL directa
-psql $DATABASE_URL -c "SELECT * FROM v_kpi_dashboard LIMIT 20;"
+# Apify (para scraping, opcional)
+APIFY_API_TOKEN=tu-token
+
+# Base de datos (opcional, por defecto usa SQLite)
+USE_SUPABASE=false
+SUPABASE_URL=tu-url
+SUPABASE_KEY=tu-key
+
+# Testing (sin credenciales de Google Cloud)
+USE_MOCK_ADK=false
+
+# Alertas Email (opcional)
+ENABLE_EMAIL_ALERTS=false
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=tu-email
+SMTP_PASSWORD=tu-password
+ALERT_RECIPIENTS=email1@example.com,email2@example.com
 ```
 
-### Alertas
-- **Slack**: `#movilidad-alertas` (noticias severidad high/critical)
-- **Slack**: `#etl-errors` (errores de ejecución)
-- **Telegram**: Grupo configurado (alertas duplicadas)
+## Uso
 
-## Testing
+### Modo Producción (con Google Cloud ADK)
 
-### Tests Unitarios
 ```bash
-# ADK Scorer
-cd adk-scorer
-pytest tests/ -v --cov=app
-
-# Scraper
-cd scraper-adv
-npm test
+cd etl-movilidad-local/src
+python main.py
 ```
 
-### Tests E2E
+### Modo Testing (sin credenciales)
+
 ```bash
-./scripts/test-e2e.sh
+cd etl-movilidad-local/src
+USE_MOCK_ADK=true python main.py
 ```
 
-### Smoke Test
-```bash
-# Forzar ejecución manual en n8n
-# Verificar:
-# - Items insertados en DB
-# - Embeddings generados
-# - Alertas enviadas (si severity=high)
-# - Logs sin errores
-```
+## Dependencias Principales
 
-## Costos Estimados
+- `google-adk` - Google Agent Development Kit
+- `google-cloud-aiplatform` - Vertex AI
+- `pydantic` - Validación de schemas
+- `apify-client` - Web scraping (opcional)
+- `supabase` - Base de datos cloud (opcional)
+- `requests`, `beautifulsoup4`, `feedparser` - Web scraping directo
 
-| Servicio | Costo/mes |
-|----------|-----------|
-| GCP (Cloud Run + SQL + Storage) | $15-50 |
-| n8n (hosting) | $5-20 |
-| Twitter API (opcional) | $100 |
-| OpenAI Embeddings | $5-15 |
-| **TOTAL** | **$125-185** |
+## Archivos Eliminados
 
-Ver sección "Costos" en [PLAN_IMPLEMENTACION.md](./PLAN_IMPLEMENTACION.md) para detalles.
+Se removieron archivos innecesarios para el funcionamiento básico:
+- Documentación extensa (*.md en raíz)
+- Scripts de testing y utilidades
+- Migraciones de base de datos
+- Terraform para despliegue
+- Schedulers y automatización
+- Versiones antiguas del código (adk_scorer_v2.py, extractors_apify.py)
 
-## Mantenimiento
+## Notas
 
-### Tareas Automáticas
-- **Diario (3am)**: Archivar noticias > 90 días, limpiar logs > 30 días
-- **Cada hora**: Health check (ingesta, error rate, latencia)
-- **Cada 5 min**: ETL principal
-
-### Rotación de Secrets
-```bash
-./scripts/rotate-secrets.sh
-```
-Calendario: cada 90 días
-
-### Backup y Restore
-```bash
-# Restore desde backup
-gcloud sql backups restore BACKUP_ID \
-  --backup-instance=etl-movilidad-db \
-  --backup-instance=etl-movilidad-db
-
-# Export manual
-gcloud sql export sql etl-movilidad-db \
-  gs://etl-movilidad-backups/manual-$(date +%Y%m%d).sql \
-  --database=etl_movilidad
-```
-
-## Troubleshooting
-
-### ETL no ejecuta
-1. Verificar cron habilitado en n8n
-2. Revisar TZ configurada: `America/Bogota`
-3. Logs: n8n → Executions → Ver errores
-
-### ADK Scorer retorna keep=false para todo
-1. Verificar prompts en `adk-scorer/app/prompts.py`
-2. Ajustar criterios de relevancia
-3. Revisar logs: `reasoning` field
-
-### Alta latencia (> 10s)
-1. Verificar Cold Start en Cloud Run (min instances=0)
-2. Optimizar prompts ADK (reducir tokens)
-3. Revisar queries DB (EXPLAIN ANALYZE)
-4. Considerar batching más agresivo
-
-### Duplicados en DB
-1. Verificar función `generate_hash_url()` idempotente
-2. Check constraints: `UNIQUE (hash_url)`
-3. Revisar logs de dedup step
-
-## Seguridad
-
-- ✅ Secrets en GCP Secret Manager (no en código)
-- ✅ Cloud Run con OIDC (no público)
-- ✅ Postgres con SSL requerido
-- ✅ Rate limiting en Scraper
-- ✅ Validación de input (Pydantic, Zod)
-- ✅ Logs estructurados (no PII)
-
-## Roadmap
-
-- [ ] Dashboard visual (Metabase/Grafana)
-- [ ] API pública para consultas
-- [ ] ML para predicción de eventos
-- [ ] App móvil con notificaciones push
-- [ ] Integración con Waze/Google Maps
-- [ ] Análisis de sentimiento
-- [ ] Detección de tendencias
-
-## Soporte
-
-- **Documentación**: [PLAN_IMPLEMENTACION.md](./PLAN_IMPLEMENTACION.md), [ARQUITECTURA.md](./ARQUITECTURA.md)
-- **Issues**: GitHub Issues
-- **Slack**: `#etl-movilidad`
-- **Email**: ops@example.com
-
-## Licencia
-
-MIT
-
----
-
-**Versión**: 1.0.0
-**Estado**: En desarrollo
-**Última actualización**: 2024-01-15
+- El proyecto usa SQLite por defecto (base de datos local en `data/etl_movilidad.db`)
+- Para producción se recomienda Supabase (configurar `USE_SUPABASE=true`)
+- El extractor intentará usar Apify si `APIFY_API_TOKEN` está configurado, sino usará scraping directo
+- Los logs se guardan en `logs/etl_pipeline.log` y `logs/alerts.json`
